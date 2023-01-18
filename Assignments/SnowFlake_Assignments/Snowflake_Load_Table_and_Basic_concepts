@@ -1,0 +1,121 @@
+USE WAREHOUSE SAMPLE_WAREHOUSE;
+USE SAMPLE_DATABASE;
+USE SCHEMA PUBLIC;
+
+
+--1 .LOADING THE SALES_DATA TABLE AND SET PRIMARY KEY.
+
+CREATE OR REPLACE TABLE AS_SALES_DATA(
+ order_id VARCHAR(30),
+ order_date	string  PRIMARY KEY,
+ ship_date string,
+ ship_mode VARCHAR(15),
+ customer_name VARCHAR(30),
+ segment VARCHAR(15),
+ state VARCHAR(150),
+ country VARCHAR(40),
+ market CHAR(10),
+ region CHAR(15),
+ product_id	CHAR(20),
+ category CHAR(20),
+ sub_category CHAR(15),
+ product_name STRING,
+ sales number(6,0),
+ quantity INT,
+ discount float,
+ profit float,
+ shipping_cost float,
+ order_priority CHAR(8),
+ year CHAR(4));
+ 
+ DESCRIBE TABLE AS_SALES_DATA;
+ SELECT * FROM AS_SALES_DATA;
+--===================================================================================================================
+--2. Change the Primary key to Order Id Column.
+
+-- DROPING PRIMARY KEY
+ALTER TABLE AS_SALES_DATA
+DROP PRIMARY KEY;
+
+-- SET ORDER_ID COLUMN AS PRIMARY KEY
+ALTER TABLE AS_SALES_DATA
+ADD PRIMARY KEY(ORDER_ID);
+--=====================================================================================================================
+
+-- 3. CHECK THE ORDER DATE AND SHIP DATE TYPE AND THINK IN WHICH DATA TYPE YOU HAVE TO CHANGE.
+
+--ADDING NEW COLUMN
+ALTER TABLE AS_SALES_DATA ADD(NEW_ORDER_DATE DATE);
+--UPDATING TO DATE FORMAT
+UPDATE AS_SALES_DATA SET NEW_ORDER_DATE = TO_DATE(ORDER_DATE,'MM-DD-YYYY');
+--DELETING THE OLD COLUMN
+ALTER TABLE AS_SALES_DATA DROP ORDER_DATE;
+--RENAMING THE NEW COLUMN
+ALTER TABLE AS_SALES_DATA RENAME COLUMN NEW_ORDER_DATE TO ORDER_DATE;
+
+SELECT * FROM AS_SALES_DATA;
+
+--====================================================================================================================
+
+--4. Create a new column called order_extract and extract the number after the last ‘–‘from Order ID column.
+
+ALTER TABLE AS_SALES_DATA ADD(ORDER_EXTRACT INTEGER);
+
+UPDATE  AS_SALES_DATA SET ORDER_EXTRACT =  REGEXP_SUBSTR(ORDER_ID,'[[:digit:]]+',1,2);
+
+SELECT * FROM AS_SALES_DATA LIMIT 10;
+--====================================================================================================================
+
+--5. Create a new column called Discount Flag and categorize it based on discount.
+--Use ‘Yes’ if the discount is greater than zero else ‘No’.
+
+
+ALTER TABLE AS_SALES_DATA ADD(DISCOUNT_FLAG VARCHAR(5));
+UPDATE AS_SALES_DATA SET DISCOUNT_FLAG = CASE
+                                                WHEN DISCOUNT>0 THEN 'YES'
+                                                ELSE 'NO'
+                                        END;
+
+--===================================================================================================================
+
+--6. Create a new column called process days and calculate how many days it takes
+--for each order id to process from the order to its shipment.
+
+ALTER TABLE AS_SALES_DATA ADD(PROCESS_DAYS INTEGER);
+
+--CHANGING THE DATATYPE OF SHIP_DATE TO DATE:
+ALTER TABLE AS_SALES_DATA ADD(NEW_SHIP_DATE DATE);
+
+UPDATE AS_SALES_DATA SET NEW_SHIP_DATE = TO_DATE(SHIP_DATE,'MM-DD-YYYY');
+
+ALTER TABLE AS_SALES_DATA DROP SHIP_DATE;
+
+ALTER TABLE AS_SALES_DATA RENAME COLUMN NEW_SHIP_DATE TO SHIP_DATE;
+
+-- NOW CALCULATING THE DATE DIFFERENCE FROM ORDER TO ITS SHIPMENT:
+UPDATE AS_SALES_DATA SET PROCESS_DAYS = DATEDIFF('day',ORDER_DATE,SHIP_DATE);
+
+SELECT * FROM AS_SALES_DATA LIMIT 10;
+--==================================================================================================================
+
+/* 7. Create a new column called Rating and then based on the Process dates give
+rating like given below.
+a. If process days less than or equal to 3days then rating should be 5
+b. If process days are greater than 3 and less than or equal to 6 then rating
+should be 4
+c. If process days are greater than 6 and less than or equal to 10 then rating
+should be 3
+d. If process days are greater than 10 then the rating should be 2.
+
+*/
+
+ALTER TABLE AS_SALES_DATA ADD(RATING INTEGER);
+
+UPDATE  AS_SALES_DATA SET RATING = CASE
+                                         WHEN PROCESS_DAYS <= 3 THEN 5
+                                         WHEN PROCESS_DAYS > 3 AND PROCESS_DAYS<= 6 THEN 4
+                                         WHEN PROCESS_DAYS > 6 AND PROCESS_DAYS<=10 THEN 3
+                                   ELSE 2
+                                   END;
+SELECT * FROM AS_SALES_DATA;
+--===============================================================================================================
