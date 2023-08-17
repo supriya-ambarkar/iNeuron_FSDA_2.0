@@ -1,0 +1,115 @@
+--TASK 1
+
+
+create database sample_database;
+use sample_database;
+
+CREATE OR REPLACE TABLE shopping_history(
+    product varchar not null,
+    quantity integer not null,
+    unit_price integer not null
+);
+
+select * from shopping_history;
+DESCRIBE TABLE SHOPPING_HISTORY;
+
+INSERT INTO SHOPPING_HISTORY VALUES
+('MILK',3,10),
+('BREAD',7,3),
+('BREAD',5,2),
+('BISCUIT',2,10),
+('CHOKI',3,12),
+('MILK',2,5);
+
+SELECT PRODUCT,SUM(QUANTITY*UNIT_PRICE) AS TOTAL_PRICE 
+FROM SHOPPING_HISTORY
+GROUP BY PRODUCT
+ORDER BY product DESC;
+
+---------------------------------------------------------------------
+
+--TASK 2
+
+--CREATING TABLE  PHONES
+create  or replace table phones 
+(name varchar(20) not null unique,
+phone_number integer not null unique);
+
+INSERT INTO phones VALUES('JACK',1234),('LENA',3333),('MARK',9999),('ANNA',7582);
+
+SELECT * FROM phones;
+
+--CREATING TABLE  PHONES
+create or replace table calls
+( id integer not null,
+caller integer not null,
+callee integer not null,
+duration integer not null,
+unique(id));
+
+INSERT INTO calls VALUES(25,1234,7582,8),(7,9999,7582,1),(18,9999,3333,4),(2,7582,3333,3),(3,3333,1234,1),(21,3333,1234,1);
+
+SELECT * FROM calls;
+
+
+--query that finds all clients who talked for at least 10 minutes in total.
+select p.name
+from phones p
+join calls c on p.phone_number = c.callee  or p.phone_number = c.caller
+group by p.name
+having sum(c.duration ) >= 10
+ORDER BY NAME;
+
+
+with call_duration as 
+(
+    select caller as phone_number ,sum(duration) as duration from calls group by caller
+    union all
+    select callee  as phone_number, sum(duration) as duration from calls group by callee
+)
+select name from phones P left outer join call_duration CD on P.phone_number=CD.phone_number
+group by name
+having sum(duration)>10
+order by name;
+
+---------------------------------------------------------------------
+-- TASK 3
+
+--1ST QUESTION
+CREATE OR REPLACE TABLE TRANSACTIONS(
+AMOUNT INTEGER NOT NULL,
+ Date DATE not null
+);
+
+INSERT INTO TRANSACTIONS VALUES(1000,'2020-01-06'),(-10,'2020-01-14'),
+(-75,'2020-01-20'),(-5,'2020-01-25'),(-4,'2020-01-29'),(2000,'2020-03-10'),
+(-75,'2020-03-12'),(-20,'2020-03-15'),(40,'2020-03-15'),(-50,'2020-03-17'),
+(200,'2020-10-10'),(-200,'2020-10-10');
+
+SELECT * FROM TRANSACTIONS;
+
+SELECT SUM(AMOUNT)-11*5 AS BALANCE
+FROM TRANSACTIONS;
+
+
+
+--3RD QUESTION
+CREATE OR REPLACE TABLE TRANSACTIONS(
+AMOUNT INTEGER NOT NULL,
+ Date DATE not null
+);
+
+DESCRIBE TABLE TRANSACTIONS;
+
+INSERT INTO TRANSACTIONS VALUES(6000,'2020-04-03');
+INSERT INTO TRANSACTIONS VALUES(5000,'2020-04-02');
+INSERT INTO TRANSACTIONS VALUES(4000,'2020-04-01');
+INSERT INTO TRANSACTIONS VALUES(3000,'2020-03-01');
+INSERT INTO TRANSACTIONS VALUES(2000,'2020-02-01');
+INSERT INTO TRANSACTIONS VALUES(1000,'2020-01-01');
+SELECT  * FROM TRANSACTIONS;
+
+SELECT SUM(AMOUNT)-(12*5) AS BALANCE
+FROM TRANSACTIONS;
+
+---------------------------------------------------------------------
